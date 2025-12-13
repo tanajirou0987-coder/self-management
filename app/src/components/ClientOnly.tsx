@@ -6,7 +6,8 @@ export function ClientOnly({ children, fallback = null }: { children: ReactNode;
     const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
-        setHasMounted(true);
+        const timer = setTimeout(() => setHasMounted(true), 0);
+        return () => clearTimeout(timer);
     }, []);
 
     if (!hasMounted) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import clsx from "clsx";
 import {
   AlertTriangle,
@@ -51,7 +51,9 @@ export const Dashboard = () => {
   const [initialDate, setInitialDate] = useState<string | null>(null);
 
   useEffect(() => {
-    setInitialDate(getCurrentAppDate());
+    // Postpone state update to next tick to avoid synchronous render warning
+    const timer = setTimeout(() => setInitialDate(getCurrentAppDate()), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!initialDate) {
