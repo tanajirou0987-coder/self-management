@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:verbose": "NODE_OPTIONS='--max-old-space-size=4096' next build",
-    "postinstall": "npm rebuild lightningcss --optional",
+    "postinstall": "npm rebuild lightningcss --optional && npm rebuild @tailwindcss/oxide --optional",
     "start": "next start",
     "lint": "eslint"
   },

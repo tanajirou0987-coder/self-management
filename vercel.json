@@ -1,6 +1,6 @@
 {
     "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' npm run build",
-    "installCommand": "npm install --legacy-peer-deps --include=optional && npm rebuild lightningcss --optional",
+    "installCommand": "npm install --legacy-peer-deps --include=optional && npm rebuild lightningcss --optional && npm rebuild @tailwindcss/oxide --optional",
     "framework": "nextjs"
 }
 
