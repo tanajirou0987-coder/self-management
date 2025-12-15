@@ -1,4 +1,4 @@
-const CACHE_NAME = "self-mgmt-cache-v1";
+const CACHE_NAME = "self-mgmt-cache-v2";
 const ASSETS_TO_CACHE = ["/", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
