@@ -91,7 +91,6 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
     removeTemplateItem,
     updateTemplateItem,
     syncGoogleCalendar,
-    syncGitHub,
   } = useDashboardSnapshot(initialDate);
 
   const [taskTitle, setTaskTitle] = useState("");
@@ -576,104 +575,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
           </section>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <section className="rounded-3xl bg-white p-6 shadow-sm">
-            <header className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">GitHub</p>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Issues & PRs
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={syncGitHub}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <RefreshCcw className="h-4 w-4" />
-                同期
-              </button>
-            </header>
-            {(snapshot.githubIssues?.length ?? 0) === 0 && (
-              <p className="text-sm text-slate-500">
-                割り当てられた Issue やレビュー待ちの PR はありません。
-              </p>
-            )}
-            <div className="space-y-4">
-              {(snapshot.githubIssues ?? []).map((issue) => (
-                <a
-                  key={issue.id}
-                  href={issue.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50"
-                >
-                  <div
-                    className={clsx(
-                      "flex h-10 w-10 items-center justify-center rounded-full",
-                      issue.type === "pr"
-                        ? "bg-purple-100 text-purple-600"
-                        : "bg-green-100 text-green-600",
-                    )}
-                  >
-                    {issue.type === "pr" ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="18" cy="18" r="3" />
-                        <circle cx="6" cy="6" r="3" />
-                        <path d="M13 6h3a2 2 0 0 1 2 2v7" />
-                        <line x1="6" x2="6" y1="9" y2="21" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" x2="12" y1="8" y2="12" />
-                        <line x1="12" x2="12.01" y1="16" y2="16" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="truncate text-sm font-semibold text-slate-900">
-                      {issue.title}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {issue.repository} • #{issue.number}
-                    </p>
-                  </div>
-                  <span
-                    className={clsx(
-                      "rounded-full px-2 py-1 text-xs font-medium",
-                      issue.status === "open"
-                        ? "bg-green-50 text-green-700"
-                        : "bg-slate-100 text-slate-600",
-                    )}
-                  >
-                    {issue.status}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </section>
-
+        <div className="mt-6">
           <section className="rounded-3xl bg-white p-6 shadow-sm">
             <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-slate-900">
