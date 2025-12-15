@@ -26,10 +26,16 @@ export async function GET(request: NextRequest) {
   }
 
   if (missingCredentials) {
+    const missingVars = [];
+    if (!calendarId) missingVars.push("GOOGLE_CALENDAR_ID");
+    if (!serviceAccountEmail) missingVars.push("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+    if (!serviceAccountKey) missingVars.push("GOOGLE_SERVICE_ACCOUNT_KEY");
+    
     return Response.json({
       events: [],
       message:
-        "Google カレンダー連携の資格情報(GOOGLE_SERVICE_ACCOUNT_*)が設定されていません。",
+        `Google カレンダー連携の資格情報が設定されていません。未設定の環境変数: ${missingVars.join(", ")}`,
+      error: "Missing credentials",
     });
   }
 
@@ -61,11 +67,17 @@ export async function GET(request: NextRequest) {
     return Response.json({ events });
   } catch (error) {
     console.error("Google calendar sync failed", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    const isAuthError = errorMessage.includes("auth") || errorMessage.includes("401") || errorMessage.includes("403");
+    
     return Response.json(
       {
-        message:
-          "Google カレンダー連携で問題が発生しました。認証設定を再確認してください。",
+        message: isAuthError
+          ? `認証エラー: ${errorMessage}。環境変数とカレンダー共有設定を確認してください。`
+          : `Google カレンダー連携で問題が発生しました: ${errorMessage}`,
         events: [],
+        error: errorMessage,
       },
       { status: 500 },
     );

@@ -8,11 +8,16 @@ export const fetchGoogleEvents = async (date: string) => {
     const payload = (await response.json().catch(() => ({}))) as {
       events?: CalendarEvent[];
       message?: string;
+      error?: string;
     };
     if (!response.ok) {
       throw new Error(
-        payload?.message ?? "Google カレンダー同期に失敗しました",
+        payload?.message ?? payload?.error ?? "Google カレンダー同期に失敗しました",
       );
+    }
+    // エラーメッセージがある場合は警告として表示
+    if (payload.message && payload.message.includes("設定されていません")) {
+      throw new Error(payload.message);
     }
     return payload.events ?? [];
   } catch (error) {

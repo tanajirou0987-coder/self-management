@@ -306,18 +306,27 @@ export const useDashboardSnapshot = (initialDate: string) => {
     setSyncState({ status: "loading", message: "Google カレンダー同期中..." });
     try {
       const events = await fetchGoogleEvents(selectedDate);
-      mutateSnapshot((prev) => ({
-        ...prev,
-        events: events.length > 0 ? events : prev.events,
-      }));
-      setSyncState({ status: "synced", message: "Google カレンダーと同期しました" });
+      if (events.length === 0) {
+        setSyncState({ 
+          status: "synced", 
+          message: "同期しました（予定が見つかりませんでした）" 
+        });
+      } else {
+        mutateSnapshot((prev) => ({
+          ...prev,
+          events,
+        }));
+        setSyncState({ 
+          status: "synced", 
+          message: `Google カレンダーと同期しました（${events.length}件の予定）` 
+        });
+      }
     } catch (error) {
       console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setSyncState({
         status: "error",
-        message:
-          (error as Error).message ??
-          "Google カレンダーとの同期で問題が発生しました",
+        message: errorMessage || "Google カレンダーとの同期で問題が発生しました",
       });
     }
   }, [mutateSnapshot, selectedDate]);
