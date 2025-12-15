@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "自己管理ダッシュボード",
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         <ServiceWorkerRegister />
+        <InstallPrompt />
       </body>
     </html>
   );
