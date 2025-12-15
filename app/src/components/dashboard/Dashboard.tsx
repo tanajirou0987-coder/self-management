@@ -17,6 +17,7 @@ import {
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import type { Mood, TaskPriority, TaskStatus } from "@/types/dashboard";
 import { getCurrentAppDate } from "@/lib/dateFormatting";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 
 const moodLabels: Record<Mood, string> = {
   great: "最高",
@@ -183,7 +184,8 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-8 flex justify-end">
+        <div className="mb-8 flex justify-end gap-2">
+          <QRCodeGenerator />
           <button
             type="button"
             onClick={handleLogout}
