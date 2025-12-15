@@ -259,7 +259,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
                 <div>
                   <p className="text-sm text-slate-500">Google カレンダー & タスク</p>
                   <h2 className="text-xl font-semibold text-slate-900">
-                    今日の予定とタスク
+                    今日の予定とカレンダータスク
                   </h2>
                 </div>
                 <button
