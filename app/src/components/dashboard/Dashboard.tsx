@@ -9,6 +9,7 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Clock3,
+  ListTodo,
   Loader2,
   Plus,
   RefreshCcw,
@@ -256,9 +257,9 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
             <div className="rounded-3xl bg-white p-6 shadow-sm">
               <header className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">Google カレンダー</p>
+                  <p className="text-sm text-slate-500">Google カレンダー & タスク</p>
                   <h2 className="text-xl font-semibold text-slate-900">
-                    今日の予定
+                    今日の予定とタスク
                   </h2>
                 </div>
                 <button
@@ -270,15 +271,86 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
                   同期
                 </button>
               </header>
-              {snapshot.events.length === 0 && (
+              {snapshot.events.length === 0 && (snapshot.googleTasks?.length ?? 0) === 0 && (
                 <p className="text-sm text-slate-500">
-                  予定が見つかりませんでした。Google カレンダーと同期するか手動で追加してください。
+                  予定やタスクが見つかりませんでした。Google カレンダーと同期するか手動で追加してください。
                 </p>
               )}
               <div className="space-y-4">
+                {/* Google Tasks */}
+                {(snapshot.googleTasks ?? []).map((task) => (
+                  <article
+                    key={`task-${task.id}`}
+                    className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const { completeGoogleTask } = await import("@/lib/googleClient");
+                          await completeGoogleTask(task.id, task.listId);
+                          syncGoogleCalendar();
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }}
+                      className={clsx(
+                        "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 hover:border-emerald-500",
+                        task.status === "completed"
+                          ? "border-emerald-500 bg-emerald-500"
+                          : "border-slate-300",
+                      )}
+                    >
+                      {task.status === "completed" && (
+                        <CheckCircle2 className="h-4 w-4 text-white" />
+                      )}
+                    </button>
+                    <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
+                      <ListTodo className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p
+                        className={clsx("text-sm font-semibold", {
+                          "text-slate-400 line-through":
+                            task.status === "completed",
+                          "text-slate-900": task.status !== "completed",
+                        })}
+                      >
+                        {task.title}
+                      </p>
+                      {task.notes && (
+                        <p className="text-xs text-slate-500">{task.notes}</p>
+                      )}
+                      {task.due && (
+                        <p className="text-xs text-slate-400">
+                          期限: {task.due.split("T")[0]}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const { deleteGoogleTask } = await import("@/lib/googleClient");
+                          await deleteGoogleTask(task.id, task.listId);
+                          syncGoogleCalendar();
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }}
+                      className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
+                    >
+                      削除
+                    </button>
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      タスク
+                    </span>
+                  </article>
+                ))}
+                {/* Calendar Events */}
                 {snapshot.events.map((event) => (
                   <article
-                    key={event.id}
+                    key={`event-${event.id}`}
                     className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4"
                   >
                     <div className="rounded-2xl bg-slate-900/5 p-3 text-slate-900">
@@ -320,6 +392,35 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
                   </article>
                 ))}
               </div>
+              {/* Add Google Task form */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newGoogleTaskTitle.trim()) return;
+                  try {
+                    const { createGoogleTask } = await import("@/lib/googleClient");
+                    await createGoogleTask({ title: newGoogleTaskTitle.trim() });
+                    setNewGoogleTaskTitle("");
+                    syncGoogleCalendar();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="mt-4 flex gap-2"
+              >
+                <input
+                  value={newGoogleTaskTitle}
+                  onChange={(e) => setNewGoogleTaskTitle(e.target.value)}
+                  placeholder="新しいタスクを追加..."
+                  className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                />
+                <button
+                  type="submit"
+                  className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  追加
+                </button>
+              </form>
               {/* Add Event form */}
               <form
                 onSubmit={async (e) => {
@@ -474,118 +575,6 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <section className="rounded-3xl bg-white p-6 shadow-sm">
-            <header className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Google Tasks</p>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  カレンダータスク
-                </h2>
-              </div>
-            </header>
-            {(snapshot.googleTasks?.length ?? 0) === 0 && (
-              <p className="text-sm text-slate-500">
-                Google Tasks にタスクがありません。
-              </p>
-            )}
-            <div className="space-y-4">
-              {(snapshot.googleTasks ?? []).map((task) => (
-                <article
-                  key={task.id}
-                  className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4"
-                >
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const { completeGoogleTask } = await import("@/lib/googleClient");
-                        await completeGoogleTask(task.id, task.listId);
-                        syncGoogleCalendar();
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }}
-                    className={clsx(
-                      "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 hover:border-emerald-500",
-                      task.status === "completed"
-                        ? "border-emerald-500 bg-emerald-500"
-                        : "border-slate-300",
-                    )}
-                  >
-                    {task.status === "completed" && (
-                      <CheckCircle2 className="h-4 w-4 text-white" />
-                    )}
-                  </button>
-                  <div className="flex-1">
-                    <p
-                      className={clsx("text-sm font-semibold", {
-                        "text-slate-400 line-through":
-                          task.status === "completed",
-                        "text-slate-900": task.status !== "completed",
-                      })}
-                    >
-                      {task.title}
-                    </p>
-                    {task.notes && (
-                      <p className="text-xs text-slate-500">{task.notes}</p>
-                    )}
-                    {task.due && (
-                      <p className="text-xs text-slate-400">
-                        期限: {task.due.split("T")[0]}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const { deleteGoogleTask } = await import("@/lib/googleClient");
-                        await deleteGoogleTask(task.id, task.listId);
-                        syncGoogleCalendar();
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }}
-                    className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
-                  >
-                    削除
-                  </button>
-                  <span className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {task.listName}
-                  </span>
-                </article>
-              ))}
-            </div>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!newGoogleTaskTitle.trim()) return;
-                try {
-                  const { createGoogleTask } = await import("@/lib/googleClient");
-                  await createGoogleTask({ title: newGoogleTaskTitle.trim() });
-                  setNewGoogleTaskTitle("");
-                  syncGoogleCalendar();
-                } catch (err) {
-                  console.error(err);
-                }
-              }}
-              className="mt-4 flex gap-2"
-            >
-              <input
-                value={newGoogleTaskTitle}
-                onChange={(e) => setNewGoogleTaskTitle(e.target.value)}
-                placeholder="新しいタスクを追加..."
-                className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-              />
-              <button
-                type="submit"
-                className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                追加
-              </button>
-            </form>
-          </section>
-
           <section className="rounded-3xl bg-white p-6 shadow-sm">
             <header className="mb-6 flex items-center justify-between">
               <div>
