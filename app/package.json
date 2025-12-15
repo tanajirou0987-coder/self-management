@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:verbose": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "postinstall": "npm rebuild lightningcss --optional",
     "start": "next start",
     "lint": "eslint"
   },
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "lightningcss": "^1.30.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
