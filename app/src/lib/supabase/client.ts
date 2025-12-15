@@ -9,6 +9,8 @@ export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const getSupabaseClient = () => {
   if (!hasSupabaseConfig) {
+    // ビルド時や環境変数が設定されていない場合は、ダミークライアントを返す
+    // 実際の使用時にはhasSupabaseConfigでチェックしているため、この関数は呼ばれないはず
     throw new Error("Supabase credentials are missing in environment variables.");
   }
 
