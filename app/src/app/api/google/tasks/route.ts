@@ -16,10 +16,10 @@ const getTasksClient = () => {
     // 2. 実際の改行を\nに統一（Windows形式の改行も対応）
     processedKey = processedKey.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     
-    // 3. \\nを\nに変換（エスケープされた改行）
-    // 複数回実行して、ネストされたエスケープにも対応
-    while (processedKey.includes("\\n")) {
-        processedKey = processedKey.replace(/\\n/g, "\n");
+    // 3. \\nや¥nを\nに変換（エスケープされた改行）
+    // Macの日本語環境では¥と\は同じ文字コードだが、念のため両方に対応
+    while (processedKey.includes("\\n") || processedKey.includes("¥n")) {
+        processedKey = processedKey.replace(/\\n/g, "\n").replace(/¥n/g, "\n");
     }
     
     // 4. 連続する改行を1つに統一（念のため）
