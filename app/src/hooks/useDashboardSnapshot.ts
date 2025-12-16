@@ -232,6 +232,42 @@ export const useDashboardSnapshot = (initialDate: string) => {
     }));
   };
 
+  // 当日の目標を操作する関数
+  const addTodayGoal = (goal: Pick<Goal, "title" | "detail">) => {
+    mutateSnapshot((prev) => ({
+      ...prev,
+      goals: [
+        ...(prev.goals ?? []),
+        { id: uuid(), title: goal.title, detail: goal.detail, completed: false },
+      ],
+    }));
+  };
+
+  const toggleTodayGoal = (id: string) => {
+    mutateSnapshot((prev) => ({
+      ...prev,
+      goals: (prev.goals ?? []).map((goal) =>
+        goal.id === id ? { ...goal, completed: !goal.completed } : goal,
+      ),
+    }));
+  };
+
+  const removeTodayGoal = (id: string) => {
+    mutateSnapshot((prev) => ({
+      ...prev,
+      goals: (prev.goals ?? []).filter((goal) => goal.id !== id),
+    }));
+  };
+
+  const updateTodayGoal = (id: string, updates: Partial<Pick<Goal, "title" | "detail">>) => {
+    mutateSnapshot((prev) => ({
+      ...prev,
+      goals: (prev.goals ?? []).map((goal) =>
+        goal.id === id ? { ...goal, ...updates } : goal,
+      ),
+    }));
+  };
+
   const updateReflectionNotes = (notes: string) => {
     mutateSnapshot((prev) => ({
       ...prev,
@@ -378,6 +414,10 @@ export const useDashboardSnapshot = (initialDate: string) => {
     addGoal,
     toggleGoal,
     removeGoal,
+    addTodayGoal,
+    toggleTodayGoal,
+    removeTodayGoal,
+    updateTodayGoal,
     updateReflectionNotes,
     updateReflectionMood,
     toggleReflectionChecklist,

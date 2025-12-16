@@ -84,6 +84,10 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
     addGoal,
     toggleGoal,
     removeGoal,
+    addTodayGoal,
+    toggleTodayGoal,
+    removeTodayGoal,
+    updateTodayGoal,
     updateReflectionNotes,
     updateReflectionMood,
     toggleReflectionChecklist,
@@ -99,6 +103,10 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
 
   const [goalTitle, setGoalTitle] = useState("");
   const [goalDetail, setGoalDetail] = useState("");
+
+  const [todayGoalTitle, setTodayGoalTitle] = useState("");
+  const [todayGoalDetail, setTodayGoalDetail] = useState("");
+  const [showTodayGoalsModal, setShowTodayGoalsModal] = useState(false);
 
   const [templateLabel, setTemplateLabel] = useState("");
   const [templateCategory, setTemplateCategory] = useState("reflection");
@@ -159,6 +167,14 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
     setGoalDetail("");
   };
 
+  const handleAddTodayGoal = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!todayGoalTitle.trim()) return;
+    addTodayGoal({ title: todayGoalTitle.trim(), detail: todayGoalDetail || undefined });
+    setTodayGoalTitle("");
+    setTodayGoalDetail("");
+  };
+
   const handleAddTemplateItem = (event: React.FormEvent) => {
     event.preventDefault();
     if (!templateLabel.trim()) return;
@@ -212,8 +228,12 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
               />
             </div>
           </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">次の目標</p>
+          <button
+            type="button"
+            onClick={() => setShowTodayGoalsModal(true)}
+            className="rounded-2xl bg-white p-5 shadow-sm text-left transition hover:bg-slate-50"
+          >
+            <p className="text-sm text-slate-500">今日の目標</p>
             <div className="mt-2 space-y-1">
               {summary.goals.filter((goal) => !goal.completed).length === 0 ? (
                 <p className="text-sm text-slate-400">目標がありません</p>
@@ -233,7 +253,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
                 </p>
               )}
             </div>
-          </div>
+          </button>
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">同期状況</p>
             <div className="mt-2 flex items-center gap-2">
@@ -791,6 +811,101 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
         {isLoading && (
           <div className="fixed inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur">
             <Loader2 className="h-10 w-10 animate-spin text-slate-700" />
+          </div>
+        )}
+
+        {/* 今日の目標編集モーダル */}
+        {showTodayGoalsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-lg">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-slate-900">今日の目標</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowTodayGoalsModal(false)}
+                  className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(snapshot.goals ?? []).map((goal) => (
+                  <div
+                    key={goal.id}
+                    className="flex items-start gap-3 rounded-2xl border border-slate-100 p-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleTodayGoal(goal.id)}
+                      className={clsx(
+                        "mt-1 h-5 w-5 rounded-full border-2",
+                        goal.completed
+                          ? "border-emerald-500 bg-emerald-500"
+                          : "border-slate-300",
+                      )}
+                    />
+                    <div className="flex-1">
+                      <input
+                        value={goal.title}
+                        onChange={(e) => updateTodayGoal(goal.id, { title: e.target.value })}
+                        className="w-full rounded-lg border border-transparent px-2 py-1 text-sm font-semibold outline-none focus:border-slate-200 focus:bg-slate-50"
+                        placeholder="目標のタイトル"
+                      />
+                      <textarea
+                        value={goal.detail || ""}
+                        onChange={(e) => updateTodayGoal(goal.id, { detail: e.target.value })}
+                        className="mt-1 w-full rounded-lg border border-transparent px-2 py-1 text-xs text-slate-500 outline-none focus:border-slate-200 focus:bg-slate-50"
+                        placeholder="補足メモ (任意)"
+                        rows={2}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeTodayGoal(goal.id)}
+                      className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
+
+                <form onSubmit={handleAddTodayGoal} className="space-y-3 rounded-2xl border border-dashed border-slate-200 p-4">
+                  <input
+                    value={todayGoalTitle}
+                    onChange={(e) => setTodayGoalTitle(e.target.value)}
+                    placeholder="新しい目標を追加..."
+                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                  />
+                  <textarea
+                    value={todayGoalDetail}
+                    onChange={(e) => setTodayGoalDetail(e.target.value)}
+                    placeholder="補足メモ (任意)"
+                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+                    rows={2}
+                  />
+                  <button
+                    type="submit"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    <Plus className="h-4 w-4" />
+                    目標を追加
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         )}
       </div>
