@@ -11,6 +11,13 @@ export async function GET(request: NextRequest) {
   const missingCredentials =
     !calendarId || !serviceAccountEmail || !serviceAccountKey;
 
+  // private_keyの形式を確認
+  const keyStartsWith = serviceAccountKey?.substring(0, 30) ?? "";
+  const keyEndsWith = serviceAccountKey?.substring(Math.max(0, (serviceAccountKey?.length ?? 0) - 30)) ?? "";
+  const hasNewlines = serviceAccountKey?.includes("\n") ?? false;
+  const hasEscapedNewlines = serviceAccountKey?.includes("\\n") ?? false;
+  const keyFormat = hasNewlines ? "actual_newlines" : hasEscapedNewlines ? "escaped_newlines" : "unknown";
+
   const debugInfo = {
     hasCalendarId: !!calendarId,
     hasServiceAccountEmail: !!serviceAccountEmail,
@@ -18,7 +25,11 @@ export async function GET(request: NextRequest) {
     calendarIdLength: calendarId?.length ?? 0,
     serviceAccountEmailLength: serviceAccountEmail?.length ?? 0,
     serviceAccountKeyLength: serviceAccountKey?.length ?? 0,
-    serviceAccountKeyStartsWith: serviceAccountKey?.substring(0, 30) ?? "",
+    serviceAccountKeyStartsWith: keyStartsWith,
+    serviceAccountKeyEndsWith: keyEndsWith,
+    keyFormat,
+    hasNewlines,
+    hasEscapedNewlines,
     missingCredentials,
   };
 
@@ -41,4 +52,5 @@ export async function GET(request: NextRequest) {
       : "環境変数は設定されています",
   });
 }
+
 

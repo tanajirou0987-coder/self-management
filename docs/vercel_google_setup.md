@@ -126,3 +126,4 @@ GOOGLE_CALENDAR_ID=abc123def456@group.calendar.google.com
 - サービスアカウントのキーは定期的にローテーションする
 - 本番環境と開発環境で異なるサービスアカウントを使用することを推奨
 
+

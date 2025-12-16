@@ -7,9 +7,21 @@ const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 const missingCredentials = !serviceAccountEmail || !serviceAccountKey;
 
 const getTasksClient = () => {
+    // private_keyの処理: 様々な形式に対応
+    let processedKey = serviceAccountKey!;
+    
+    // 1. 実際の改行を\nに統一
+    processedKey = processedKey.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    
+    // 2. \\nを\nに変換（エスケープされた改行）
+    processedKey = processedKey.replace(/\\n/g, "\n");
+    
+    // 3. 前後の余分な空白やクォートを削除
+    processedKey = processedKey.trim().replace(/^["']|["']$/g, "");
+    
     const auth = new google.auth.JWT({
         email: serviceAccountEmail,
-        key: serviceAccountKey!.replace(/\\n/g, "\n"),
+        key: processedKey,
         scopes: ["https://www.googleapis.com/auth/tasks"],
     });
     return google.tasks({ version: "v1", auth });
