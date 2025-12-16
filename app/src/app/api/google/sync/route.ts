@@ -14,14 +14,28 @@ const getCalendarClient = () => {
   // private_keyの処理: 様々な形式に対応
   let processedKey = serviceAccountKey!;
   
-  // 1. 実際の改行を\nに統一
+  // 1. 前後の余分な空白やクォートを削除（最初に実行）
+  processedKey = processedKey.trim().replace(/^["']|["']$/g, "");
+  
+  // 2. 実際の改行を\nに統一（Windows形式の改行も対応）
   processedKey = processedKey.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   
-  // 2. \\nを\nに変換（エスケープされた改行）
-  processedKey = processedKey.replace(/\\n/g, "\n");
+  // 3. \\nを\nに変換（エスケープされた改行）
+  // 複数回実行して、ネストされたエスケープにも対応
+  while (processedKey.includes("\\n")) {
+    processedKey = processedKey.replace(/\\n/g, "\n");
+  }
   
-  // 3. 前後の余分な空白やクォートを削除
-  processedKey = processedKey.trim().replace(/^["']|["']$/g, "");
+  // 4. 連続する改行を1つに統一（念のため）
+  processedKey = processedKey.replace(/\n{3,}/g, "\n\n");
+  
+  // 5. 秘密鍵の開始・終了マーカーを確認
+  if (!processedKey.includes("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error("Invalid private key format: missing BEGIN marker");
+  }
+  if (!processedKey.includes("-----END PRIVATE KEY-----")) {
+    throw new Error("Invalid private key format: missing END marker");
+  }
   
   const auth = new google.auth.JWT({
     email: serviceAccountEmail,
@@ -81,15 +95,25 @@ export async function GET(request: NextRequest) {
     console.error("Google calendar sync failed", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    // デコードエラーの場合、より詳細な情報を提供
+    const isDecodeError = errorMessage.includes("DECODER") || errorMessage.includes("1E08010C");
     const isAuthError = errorMessage.includes("auth") || errorMessage.includes("401") || errorMessage.includes("403");
+    
+    let detailedMessage = errorMessage;
+    if (isDecodeError) {
+      detailedMessage = `秘密鍵の形式が正しくありません。環境変数GOOGLE_SERVICE_ACCOUNT_KEYを確認してください。エラー: ${errorMessage}`;
+    } else if (isAuthError) {
+      detailedMessage = `認証エラー: ${errorMessage}。環境変数とカレンダー共有設定を確認してください。`;
+    }
     
     return Response.json(
       {
-        message: isAuthError
-          ? `認証エラー: ${errorMessage}。環境変数とカレンダー共有設定を確認してください。`
-          : `Google カレンダー連携で問題が発生しました: ${errorMessage}`,
+        message: `Google カレンダー連携で問題が発生しました: ${detailedMessage}`,
         events: [],
         error: errorMessage,
+        ...(process.env.NODE_ENV === "development" && { stack: errorStack }),
       },
       { status: 500 },
     );

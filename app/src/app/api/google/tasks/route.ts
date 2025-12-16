@@ -10,14 +10,28 @@ const getTasksClient = () => {
     // private_keyの処理: 様々な形式に対応
     let processedKey = serviceAccountKey!;
     
-    // 1. 実際の改行を\nに統一
+    // 1. 前後の余分な空白やクォートを削除（最初に実行）
+    processedKey = processedKey.trim().replace(/^["']|["']$/g, "");
+    
+    // 2. 実際の改行を\nに統一（Windows形式の改行も対応）
     processedKey = processedKey.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     
-    // 2. \\nを\nに変換（エスケープされた改行）
-    processedKey = processedKey.replace(/\\n/g, "\n");
+    // 3. \\nを\nに変換（エスケープされた改行）
+    // 複数回実行して、ネストされたエスケープにも対応
+    while (processedKey.includes("\\n")) {
+        processedKey = processedKey.replace(/\\n/g, "\n");
+    }
     
-    // 3. 前後の余分な空白やクォートを削除
-    processedKey = processedKey.trim().replace(/^["']|["']$/g, "");
+    // 4. 連続する改行を1つに統一（念のため）
+    processedKey = processedKey.replace(/\n{3,}/g, "\n\n");
+    
+    // 5. 秘密鍵の開始・終了マーカーを確認
+    if (!processedKey.includes("-----BEGIN PRIVATE KEY-----")) {
+        throw new Error("Invalid private key format: missing BEGIN marker");
+    }
+    if (!processedKey.includes("-----END PRIVATE KEY-----")) {
+        throw new Error("Invalid private key format: missing END marker");
+    }
     
     const auth = new google.auth.JWT({
         email: serviceAccountEmail,
