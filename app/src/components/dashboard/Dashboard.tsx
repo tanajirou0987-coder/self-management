@@ -210,8 +210,8 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
     <div className="flex min-h-screen bg-slate-50">
       {/* サイドバー */}
       <aside className={clsx(
-        "fixed inset-y-0 left-0 z-40 w-80 transform bg-white shadow-lg transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-lg transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
