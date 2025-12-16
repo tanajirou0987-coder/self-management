@@ -3,16 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { ja } from "date-fns/locale";
 import clsx from "clsx";
 import {
   AlertTriangle,
   Calendar as CalendarIcon,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   ListTodo,
   Loader2,
+  Menu,
   Plus,
   RefreshCcw,
+  X,
 } from "lucide-react";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import type { Mood, TaskPriority, TaskStatus } from "@/types/dashboard";
@@ -95,6 +100,8 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
     removeTemplateItem,
     updateTemplateItem,
     syncGoogleCalendar,
+    changeDate,
+    setSelectedDate,
   } = useDashboardSnapshot(initialDate);
 
   const [taskTitle, setTaskTitle] = useState("");
@@ -110,6 +117,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
 
   const [templateLabel, setTemplateLabel] = useState("");
   const [templateCategory, setTemplateCategory] = useState("reflection");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const planningTabs = [
     { id: "goals", label: "翌日の目標" },
     { id: "reflection", label: "1日の振り返り" },
@@ -196,82 +204,157 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
 
 
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-8 flex justify-end gap-2">
-          <QRCodeGenerator />
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            ログアウト
-          </button>
-        </div>
+  const formattedDate = format(new Date(selectedDate), "yyyy年MM月dd日 (E)", { locale: ja });
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">タスク進捗</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-3xl font-semibold text-slate-900">
-                {summary.taskProgress}%
-              </p>
-              <p className="text-sm text-slate-500">
+  return (
+    <div className="flex min-h-screen bg-slate-50">
+      {/* サイドバー */}
+      <aside className={clsx(
+        "fixed inset-y-0 left-0 z-40 w-80 transform bg-white shadow-lg transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="flex h-full flex-col p-6">
+          {/* サイドバーヘッダー */}
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-slate-900">自己管理アプリ</h1>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden rounded-full p-2 text-slate-400 hover:bg-slate-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* 日付ナビゲーション */}
+          <div className="mb-6 rounded-2xl bg-slate-50 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => changeDate(-1)}
+                className="rounded-full p-2 text-slate-600 hover:bg-white"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(initialDate)}
+                className="text-sm font-semibold text-slate-900"
+              >
+                今日
+              </button>
+              <button
+                type="button"
+                onClick={() => changeDate(1)}
+                className="rounded-full p-2 text-slate-600 hover:bg-white"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-center text-sm text-slate-600">{formattedDate}</p>
+          </div>
+
+          {/* 統計情報 */}
+          <div className="mb-6 space-y-4">
+            <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 p-5 text-white">
+              <p className="text-sm text-slate-300">タスク進捗</p>
+              <div className="mt-2 flex items-baseline gap-2">
+                <p className="text-4xl font-bold">{summary.taskProgress}%</p>
+              </div>
+              <div className="mt-4 h-2 rounded-full bg-slate-600">
+                <div
+                  className="h-2 rounded-full bg-white transition-all"
+                  style={{ width: `${summary.taskProgress}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-300">
                 {summary.events.length}件の予定
               </p>
             </div>
-            <div className="mt-4 h-2 rounded-full bg-slate-100">
-              <div
-                className="h-2 rounded-full bg-slate-900 transition-all"
-                style={{ width: `${summary.taskProgress}%` }}
-              />
+
+            <button
+              type="button"
+              onClick={() => setShowTodayGoalsModal(true)}
+              className="w-full rounded-2xl bg-white p-4 text-left shadow-sm transition hover:bg-slate-50"
+            >
+              <p className="text-sm text-slate-500">今日の目標</p>
+              <div className="mt-2 space-y-1">
+                {summary.goals.filter((goal) => !goal.completed).length === 0 ? (
+                  <p className="text-sm text-slate-400">目標がありません</p>
+                ) : (
+                  summary.goals
+                    .filter((goal) => !goal.completed)
+                    .slice(0, 3)
+                    .map((goal) => (
+                      <p key={goal.id} className="text-sm font-medium text-slate-900 truncate">
+                        • {goal.title}
+                      </p>
+                    ))
+                )}
+                {summary.goals.filter((goal) => !goal.completed).length > 3 && (
+                  <p className="text-xs text-slate-500">
+                    +{summary.goals.filter((goal) => !goal.completed).length - 3}件
+                  </p>
+                )}
+              </div>
+            </button>
+
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-sm text-slate-500">同期状況</p>
+              <div className="mt-2 flex items-center gap-2">
+                {syncState.status === "loading" || syncState.status === "saving" ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-700" />
+                ) : (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                )}
+                <span className="text-sm font-semibold text-slate-900">
+                  {syncState.message}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Supabase & ローカルへ自動保存
+              </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowTodayGoalsModal(true)}
-            className="rounded-2xl bg-white p-5 shadow-sm text-left transition hover:bg-slate-50"
-          >
-            <p className="text-sm text-slate-500">今日の目標</p>
-            <div className="mt-2 space-y-1">
-              {summary.goals.filter((goal) => !goal.completed).length === 0 ? (
-                <p className="text-sm text-slate-400">目標がありません</p>
-              ) : (
-                summary.goals
-                  .filter((goal) => !goal.completed)
-                  .slice(0, 3)
-                  .map((goal) => (
-                    <p key={goal.id} className="text-sm font-medium text-slate-900 truncate">
-                      • {goal.title}
-                    </p>
-                  ))
-              )}
-              {summary.goals.filter((goal) => !goal.completed).length > 3 && (
-                <p className="text-xs text-slate-500">
-                  +{summary.goals.filter((goal) => !goal.completed).length - 3}件
-                </p>
-              )}
-            </div>
-          </button>
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">同期状況</p>
-            <div className="mt-2 flex items-center gap-2">
-              {syncState.status === "loading" ||
-                syncState.status === "saving" ? (
-                <Loader2 className="h-5 w-5 animate-spin text-slate-700" />
-              ) : (
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              )}
-              <span className="text-base font-semibold text-slate-900">
-                {syncState.message}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">
-              Supabase & ローカルへ自動保存
-            </p>
+
+          {/* クイックアクション */}
+          <div className="mt-auto space-y-2">
+            <QRCodeGenerator />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              ログアウト
+            </button>
           </div>
         </div>
+      </aside>
+
+      {/* サイドバーオーバーレイ（モバイル用） */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* メインコンテンツ */}
+      <div className="flex-1 lg:ml-0">
+        <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
+          {/* モバイルヘッダー */}
+          <div className="mb-6 flex items-center justify-between lg:hidden">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-full p-2 text-slate-700 hover:bg-slate-100"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <h1 className="text-lg font-bold text-slate-900">自己管理アプリ</h1>
+            <div className="w-10" />
+          </div>
+
 
         {/* 予定とタスクの統合表示セクション */}
         <section className="mb-6">
