@@ -655,7 +655,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
 
         {/* 編集タブセクション（夜のレポート） */}
         <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
-            <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-slate-900">
                 夜のレポート
               </h2>
@@ -864,7 +864,6 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
               </div>
             )}
           </section>
-        </div>
 
         {isLoading && (
           <div className="fixed inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur">
