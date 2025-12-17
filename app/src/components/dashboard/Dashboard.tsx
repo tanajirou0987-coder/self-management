@@ -204,9 +204,9 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   const formattedDate = format(new Date(selectedDate), "yyyy年MM月dd日 (E)", { locale: ja });
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 lg:flex-row lg:h-screen">
+    <div className="flex min-h-screen bg-slate-50">
       {/* サイドバー */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-80 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg lg:static">
+      <aside className="fixed inset-y-0 left-0 z-40 w-80 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
           <div className="mb-6">
@@ -319,7 +319,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
       </aside>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 ml-80 lg:ml-0">
+      <div className="flex-1 ml-80">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
 
         {/* 予定とタスクの統合表示セクション */}
