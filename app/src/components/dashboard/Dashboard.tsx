@@ -206,7 +206,6 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   return (
     <div className="p-6">
       <div className="mx-auto max-w-6xl">
-
         {/* 予定とタスクの統合表示セクション */}
         <section className="mb-6">
           <div className="rounded-3xl bg-white p-6 shadow-sm">
@@ -465,14 +464,14 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
           </div>
         </section>
 
-          {isLoading && (
-            <div className="fixed inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur">
-              <Loader2 className="h-10 w-10 animate-spin text-slate-700" />
-            </div>
-          )}
+        {isLoading && (
+          <div className="fixed inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur">
+            <Loader2 className="h-10 w-10 animate-spin text-slate-700" />
+          </div>
+        )}
 
-          {/* 今日の目標編集モーダル */}
-          {showTodayGoalsModal && (
+        {/* 今日の目標編集モーダル */}
+        {showTodayGoalsModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
               <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-lg">
                 <div className="mb-6 flex items-center justify-between">
