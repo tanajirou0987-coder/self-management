@@ -14,10 +14,8 @@ import {
   Clock3,
   ListTodo,
   Loader2,
-  Menu,
   Plus,
   RefreshCcw,
-  X,
 } from "lucide-react";
 import { useDashboardSnapshot } from "@/hooks/useDashboardSnapshot";
 import type { Mood, TaskPriority, TaskStatus } from "@/types/dashboard";
@@ -117,7 +115,6 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
 
   const [templateLabel, setTemplateLabel] = useState("");
   const [templateCategory, setTemplateCategory] = useState("reflection");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const planningTabs = [
     { id: "goals", label: "翌日の目標" },
     { id: "reflection", label: "1日の振り返り" },
@@ -207,23 +204,13 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   const formattedDate = format(new Date(selectedDate), "yyyy年MM月dd日 (E)", { locale: ja });
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50 lg:flex-row lg:h-screen">
       {/* サイドバー */}
-      <aside className={clsx(
-        "fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-lg transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}>
+      <aside className="w-full border-b border-slate-100 bg-white shadow-lg lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:h-screen lg:w-80 lg:flex-shrink-0 lg:border-b-0 lg:border-r lg:overflow-y-auto">
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6">
             <h1 className="text-xl font-bold text-slate-900">自己管理アプリ</h1>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden rounded-full p-2 text-slate-400 hover:bg-slate-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
 
           {/* 日付ナビゲーション */}
@@ -331,30 +318,9 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
         </div>
       </aside>
 
-      {/* サイドバーオーバーレイ（モバイル用） */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       {/* メインコンテンツ */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-80">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
-          {/* モバイルヘッダー */}
-          <div className="mb-6 flex items-center justify-between lg:hidden">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="rounded-full p-2 text-slate-700 hover:bg-slate-100"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-            <h1 className="text-lg font-bold text-slate-900">自己管理アプリ</h1>
-            <div className="w-10" />
-          </div>
-
 
         {/* 予定とタスクの統合表示セクション */}
         <section className="mb-6">

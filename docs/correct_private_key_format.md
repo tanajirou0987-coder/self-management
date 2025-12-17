@@ -60,3 +60,4 @@ curl https://self-management-app.vercel.app/api/google/debug
 `{"configured":true}` と表示されれば成功です。
 
 
+
