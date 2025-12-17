@@ -206,7 +206,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* サイドバー */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-80 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
+      <aside className="fixed inset-y-0 left-0 z-40 w-96 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
           <div className="mb-6">
@@ -304,6 +304,329 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
             </div>
           </div>
 
+          {/* 追加フォームセクション */}
+          <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+            <h3 className="mb-4 text-sm font-semibold text-slate-900">追加</h3>
+            <div className="space-y-4">
+              {/* Google Task追加フォーム */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newGoogleTaskTitle.trim()) return;
+                  try {
+                    const { createGoogleTask } = await import("@/lib/googleClient");
+                    await createGoogleTask({ title: newGoogleTaskTitle.trim() });
+                    setNewGoogleTaskTitle("");
+                    syncGoogleCalendar();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  value={newGoogleTaskTitle}
+                  onChange={(e) => setNewGoogleTaskTitle(e.target.value)}
+                  placeholder="Googleタスク..."
+                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                >
+                  追加
+                </button>
+              </form>
+
+              {/* 予定追加フォーム */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newEventTitle.trim() || !newEventStart || !newEventEnd) return;
+                  try {
+                    const { createGoogleEvent } = await import("@/lib/googleClient");
+                    await createGoogleEvent({
+                      title: newEventTitle.trim(),
+                      start: new Date(`${selectedDate}T${newEventStart}`).toISOString(),
+                      end: new Date(`${selectedDate}T${newEventEnd}`).toISOString(),
+                    });
+                    setNewEventTitle("");
+                    setNewEventStart("");
+                    setNewEventEnd("");
+                    syncGoogleCalendar();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="space-y-2"
+              >
+                <input
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                  placeholder="予定..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    value={newEventStart}
+                    onChange={(e) => setNewEventStart(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                  />
+                  <input
+                    type="time"
+                    value={newEventEnd}
+                    onChange={(e) => setNewEventEnd(e.target.value)}
+                    className="flex-1 rounded-xl border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+                >
+                  <Plus className="h-3 w-3" />
+                  予定を追加
+                </button>
+              </form>
+
+              {/* ローカルタスク追加フォーム */}
+              <form onSubmit={handleAddTask} className="space-y-2">
+                <input
+                  value={taskTitle}
+                  onChange={(event) => setTaskTitle(event.target.value)}
+                  placeholder="タスク..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                />
+                <div className="flex gap-2">
+                  <select
+                    value={taskPriority}
+                    onChange={(event) =>
+                      setTaskPriority(event.target.value as TaskPriority)
+                    }
+                    className="flex-1 rounded-xl border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                  >
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                  </select>
+                  <input
+                    value={taskDueTime}
+                    onChange={(event) => setTaskDueTime(event.target.value)}
+                    type="time"
+                    className="w-24 rounded-xl border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700"
+                >
+                  <Plus className="h-3 w-3" />
+                  タスクを追加
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* 夜のレポートセクション */}
+          <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+            <header className="mb-4">
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">夜のレポート</h3>
+              <div className="flex flex-wrap gap-2">
+                {planningTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActivePlanningTab(tab.id)}
+                    className={clsx(
+                      "rounded-full px-2 py-1 text-xs font-semibold",
+                      activePlanningTab === tab.id
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </header>
+
+            {activePlanningTab === "goals" && (
+              <div className="space-y-3">
+                {(snapshot.goalsForTomorrow ?? []).map((goal) => (
+                  <div
+                    key={goal.id}
+                    className="flex items-start gap-2 rounded-xl border border-slate-100 p-3"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleGoal(goal.id)}
+                      className={clsx(
+                        "mt-0.5 h-4 w-4 rounded-full border-2",
+                        goal.completed
+                          ? "border-emerald-500 bg-emerald-500"
+                          : "border-slate-300",
+                      )}
+                    />
+                    <div className="flex-1">
+                      <p
+                        className={clsx("text-xs font-semibold", {
+                          "text-slate-400 line-through": goal.completed,
+                          "text-slate-900": !goal.completed,
+                        })}
+                      >
+                        {goal.title}
+                      </p>
+                      {goal.detail && (
+                        <p className="text-xs text-slate-500">{goal.detail}</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeGoal(goal.id)}
+                      className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
+                <form onSubmit={handleAddGoal} className="space-y-2">
+                  <input
+                    value={goalTitle}
+                    onChange={(event) => setGoalTitle(event.target.value)}
+                    onFocus={handleEveningReportFocus}
+                    placeholder="目標のタイトル"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                  />
+                  <textarea
+                    value={goalDetail}
+                    onChange={(event) => setGoalDetail(event.target.value)}
+                    onFocus={handleEveningReportFocus}
+                    placeholder="補足メモ (任意)"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                    rows={2}
+                  />
+                  <button
+                    type="submit"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    <Plus className="h-3 w-3" />
+                    目標を追加
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {activePlanningTab === "reflection" && (
+              <div className="space-y-3">
+                {reportReminderVisible && hasIncompleteTasks && (
+                  <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-semibold">今日のタスクが完了していません</p>
+                      <p>
+                        振り返りや目標を書く前に未完了 {incompleteTaskCount}
+                        件のタスクを確認してください。
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {(Object.keys(moodLabels) as Mood[]).map((mood) => (
+                    <button
+                      key={mood}
+                      type="button"
+                      onClick={() => updateReflectionMood(mood)}
+                      className={clsx(
+                        "rounded-full px-3 py-1 text-xs font-semibold",
+                        snapshot.reflection?.mood === mood
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-700",
+                      )}
+                    >
+                      {moodLabels[mood]}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={snapshot.reflection?.notes ?? ""}
+                  onChange={(e) => updateReflectionNotes(e.target.value)}
+                  placeholder="今日の振り返りを書いてください..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                  rows={4}
+                />
+                {(snapshot.reflection?.checklist ?? []).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 rounded-xl border border-slate-100 p-2"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleReflectionChecklist(item.id)}
+                      className={clsx(
+                        "h-4 w-4 rounded border-2",
+                        item.checked
+                          ? "border-emerald-500 bg-emerald-500"
+                          : "border-slate-300",
+                      )}
+                    />
+                    <span
+                      className={clsx("flex-1 text-xs", {
+                        "text-slate-400 line-through": item.checked,
+                        "text-slate-900": !item.checked,
+                      })}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activePlanningTab === "checklist" && (
+              <div className="space-y-3">
+                {(snapshot.templates ?? []).map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center gap-2 rounded-xl border border-slate-100 p-2"
+                  >
+                    <span className="flex-1 text-xs text-slate-900">{template.label}</span>
+                    <span className="text-xs text-slate-500">{template.category}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTemplateItem(template.id)}
+                      className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
+                    >
+                      削除
+                    </button>
+                  </div>
+                ))}
+                <form onSubmit={handleAddTemplateItem} className="space-y-2">
+                  <input
+                    value={templateLabel}
+                    onChange={(e) => setTemplateLabel(e.target.value)}
+                    placeholder="チェックリスト項目"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                  />
+                  <select
+                    value={templateCategory}
+                    onChange={(e) => setTemplateCategory(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-900"
+                  >
+                    <option value="reflection">振り返り</option>
+                    <option value="goals">目標</option>
+                  </select>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    <Plus className="h-3 w-3" />
+                    追加
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
           {/* クイックアクション */}
           <div className="mt-auto space-y-2">
             <QRCodeGenerator />
@@ -319,7 +642,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
       </aside>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 ml-80">
+      <div className="flex-1 ml-96">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
 
         {/* 予定とタスクの統合表示セクション */}
@@ -577,342 +900,8 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
                 </div>
               );
             })()}
-
-            {/* 追加フォーム */}
-            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
-              {/* Google Task追加フォーム */}
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!newGoogleTaskTitle.trim()) return;
-                  try {
-                    const { createGoogleTask } = await import("@/lib/googleClient");
-                    await createGoogleTask({ title: newGoogleTaskTitle.trim() });
-                    setNewGoogleTaskTitle("");
-                    syncGoogleCalendar();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  value={newGoogleTaskTitle}
-                  onChange={(e) => setNewGoogleTaskTitle(e.target.value)}
-                  placeholder="Googleタスクを追加..."
-                  className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                />
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                  追加
-                </button>
-              </form>
-
-              {/* 予定追加フォーム */}
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!newEventTitle.trim() || !newEventStart || !newEventEnd) return;
-                  try {
-                    const { createGoogleEvent } = await import("@/lib/googleClient");
-                    await createGoogleEvent({
-                      title: newEventTitle.trim(),
-                      start: new Date(`${selectedDate}T${newEventStart}`).toISOString(),
-                      end: new Date(`${selectedDate}T${newEventEnd}`).toISOString(),
-                    });
-                    setNewEventTitle("");
-                    setNewEventStart("");
-                    setNewEventEnd("");
-                    syncGoogleCalendar();
-                  } catch (err) {
-                    console.error(err);
-                  }
-                }}
-                className="space-y-3"
-              >
-                <input
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  placeholder="予定を追加..."
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="time"
-                    value={newEventStart}
-                    onChange={(e) => setNewEventStart(e.target.value)}
-                    className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                    placeholder="開始"
-                  />
-                  <input
-                    type="time"
-                    value={newEventEnd}
-                    onChange={(e) => setNewEventEnd(e.target.value)}
-                    className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                    placeholder="終了"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  <Plus className="h-4 w-4" />
-                  予定を追加
-                </button>
-              </form>
-
-              {/* ローカルタスク追加フォーム */}
-              <form onSubmit={handleAddTask} className="space-y-3">
-                <input
-                  value={taskTitle}
-                  onChange={(event) => setTaskTitle(event.target.value)}
-                  placeholder="タスクを追加..."
-                  className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                />
-                <div className="flex gap-2">
-                  <select
-                    value={taskPriority}
-                    onChange={(event) =>
-                      setTaskPriority(event.target.value as TaskPriority)
-                    }
-                    className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  >
-                    <option value="high">優先度: 高</option>
-                    <option value="medium">優先度: 中</option>
-                    <option value="low">優先度: 低</option>
-                  </select>
-                  <input
-                    value={taskDueTime}
-                    onChange={(event) => setTaskDueTime(event.target.value)}
-                    type="time"
-                    className="w-32 rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  タスクを追加
-                </button>
-              </form>
-            </div>
           </div>
         </section>
-
-        {/* 編集タブセクション（夜のレポート） */}
-        <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
-          <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold text-slate-900">
-                夜のレポート
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {planningTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActivePlanningTab(tab.id)}
-                    className={clsx(
-                      "rounded-full px-3 py-1 text-sm font-semibold",
-                      activePlanningTab === tab.id
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-700",
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </header>
-
-            {activePlanningTab === "goals" && (
-              <div className="space-y-4">
-                {(snapshot.goalsForTomorrow ?? []).map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="flex items-start gap-3 rounded-2xl border border-slate-100 p-4"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleGoal(goal.id)}
-                      className={clsx(
-                        "mt-1 h-5 w-5 rounded-full border-2",
-                        goal.completed
-                          ? "border-emerald-500 bg-emerald-500"
-                          : "border-slate-300",
-                      )}
-                    />
-                    <div className="flex-1">
-                      <p
-                        className={clsx("text-sm font-semibold", {
-                          "text-slate-400 line-through": goal.completed,
-                          "text-slate-900": !goal.completed,
-                        })}
-                      >
-                        {goal.title}
-                      </p>
-                      {goal.detail && (
-                        <p className="text-xs text-slate-500">{goal.detail}</p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeGoal(goal.id)}
-                      className="text-xs text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
-                    >
-                      削除
-                    </button>
-                  </div>
-                ))}
-                <form onSubmit={handleAddGoal} className="space-y-3">
-                  <input
-                    value={goalTitle}
-                    onChange={(event) => setGoalTitle(event.target.value)}
-                    onFocus={handleEveningReportFocus}
-                    placeholder="目標のタイトル"
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  />
-                  <textarea
-                    value={goalDetail}
-                    onChange={(event) => setGoalDetail(event.target.value)}
-                    onFocus={handleEveningReportFocus}
-                    placeholder="補足メモ (任意)"
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  />
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    <Plus className="h-4 w-4" />
-                    目標を追加
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {activePlanningTab === "reflection" && (
-              <div>
-                {reportReminderVisible && hasIncompleteTasks && (
-                  <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-semibold">今日のタスクが完了していません</p>
-                      <p>
-                        振り返りや目標を書く前に未完了 {incompleteTaskCount}
-                        件のタスクを確認してください。
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="text-xs font-semibold text-amber-900 underline-offset-4 hover:underline"
-                      onClick={() => setReportReminderVisible(false)}
-                    >
-                      閉じる
-                    </button>
-                  </div>
-                )}
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {(Object.keys(moodLabels) as Mood[]).map((mood) => (
-                      <button
-                        key={mood}
-                        type="button"
-                        onClick={() => updateReflectionMood(mood)}
-                        className={clsx(
-                          "rounded-full px-4 py-2 text-sm font-semibold transition",
-                          snapshot.reflection.mood === mood
-                            ? "bg-slate-900 text-white"
-                            : "bg-slate-100 text-slate-700",
-                        )}
-                      >
-                        {moodLabels[mood]}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="space-y-3">
-                    {snapshot.reflection.checklist.map((item) => (
-                      <label
-                        key={item.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-100 p-3"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={item.checked}
-                          onChange={() => toggleReflectionChecklist(item.id)}
-                          className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                        />
-                        <span className="text-sm text-slate-700">
-                          {item.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  <textarea
-                    value={snapshot.reflection.notes}
-                    onChange={(event) => updateReflectionNotes(event.target.value)}
-                    onFocus={handleEveningReportFocus}
-                    placeholder="気づき、学び、感謝を書き留める..."
-                    className="h-32 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-900"
-                  />
-                </div>
-              </div>
-            )}
-
-            {activePlanningTab === "checklist" && (
-              <div className="space-y-4">
-                {snapshot.checklistTemplate.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-slate-100 p-4"
-                  >
-                    <input
-                      value={item.label}
-                      onChange={(event) =>
-                        updateTemplateItem(item.id, event.target.value)
-                      }
-                      className="w-full rounded-2xl border border-transparent px-3 py-2 text-sm outline-none focus:border-slate-200 focus:bg-slate-50"
-                    />
-                    <div className="mt-2 flex justify-between text-xs text-slate-500">
-                      <span>{item.category ?? "custom"}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTemplateItem(item.id)}
-                        className="text-slate-400 underline-offset-4 hover:text-red-500 hover:underline"
-                      >
-                        削除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <form onSubmit={handleAddTemplateItem} className="space-y-3">
-                  <input
-                    value={templateLabel}
-                    onChange={(event) => setTemplateLabel(event.target.value)}
-                    placeholder="テンプレ項目を追加"
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  />
-                  <select
-                    value={templateCategory}
-                    onChange={(event) => setTemplateCategory(event.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
-                  >
-                    <option value="reflection">振り返り</option>
-                    <option value="goal">目標設定</option>
-                    <option value="custom">カスタム</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-900"
-                  >
-                    <Plus className="h-4 w-4" />
-                    新規項目
-                  </button>
-                </form>
-              </div>
-            )}
-          </section>
 
           {isLoading && (
             <div className="fixed inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur">
