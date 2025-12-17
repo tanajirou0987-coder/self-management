@@ -206,7 +206,19 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   return (
     <div className="relative min-h-screen bg-slate-50">
       {/* サイドバー */}
-      <aside className="fixed top-0 left-0 bottom-0 z-40 w-96 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
+      <aside 
+        className="fixed top-0 left-0 bottom-0 z-50 w-96 overflow-y-auto border-r-2 border-slate-200 bg-white shadow-xl" 
+        style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '384px',
+          zIndex: 50,
+          backgroundColor: 'white',
+          display: 'block'
+        }}
+      >
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
           <div className="mb-6">
