@@ -204,9 +204,9 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   const formattedDate = format(new Date(selectedDate), "yyyy年MM月dd日 (E)", { locale: ja });
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="relative min-h-screen bg-slate-50">
       {/* サイドバー */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-96 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
+      <aside className="fixed top-0 left-0 bottom-0 z-40 w-96 overflow-y-auto border-r border-slate-100 bg-white shadow-lg">
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
           <div className="mb-6">
