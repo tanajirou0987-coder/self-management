@@ -11,9 +11,14 @@ export const fetchGoogleEvents = async (date: string) => {
       error?: string;
     };
     if (!response.ok) {
-      throw new Error(
-        payload?.message ?? payload?.error ?? "Google カレンダー同期に失敗しました",
-      );
+      const errorMsg = payload?.message ?? payload?.error ?? `Google カレンダー同期に失敗しました (${response.status})`;
+      console.error("Google Calendar API error:", response.status, errorMsg);
+      // 401エラーの場合は空配列を返して続行
+      if (response.status === 401) {
+        console.warn("認証エラー: Google Calendar APIへのアクセスが拒否されました");
+        return [];
+      }
+      throw new Error(errorMsg);
     }
     // エラーメッセージがある場合は警告として表示
     if (payload.message && payload.message.includes("設定されていません")) {
@@ -21,6 +26,11 @@ export const fetchGoogleEvents = async (date: string) => {
     }
     return payload.events ?? [];
   } catch (error) {
+    console.error("fetchGoogleEvents error:", error);
+    // 401エラーの場合は空配列を返して続行
+    if (error instanceof Error && error.message.includes("401")) {
+      return [];
+    }
     throw new Error(
       error instanceof Error
         ? error.message
@@ -67,12 +77,22 @@ export const fetchGoogleTasks = async (date: string) => {
       message?: string;
     };
     if (!response.ok) {
-      throw new Error(
-        payload?.message ?? "Google Tasks 同期に失敗しました",
-      );
+      const errorMsg = payload?.message ?? `Google Tasks 同期に失敗しました (${response.status})`;
+      console.error("Google Tasks API error:", response.status, errorMsg);
+      // 401エラーの場合は空配列を返して続行
+      if (response.status === 401) {
+        console.warn("認証エラー: Google Tasks APIへのアクセスが拒否されました");
+        return [];
+      }
+      throw new Error(errorMsg);
     }
     return payload.tasks ?? [];
   } catch (error) {
+    console.error("fetchGoogleTasks error:", error);
+    // 401エラーの場合は空配列を返して続行
+    if (error instanceof Error && error.message.includes("401")) {
+      return [];
+    }
     throw new Error(
       error instanceof Error
         ? error.message
