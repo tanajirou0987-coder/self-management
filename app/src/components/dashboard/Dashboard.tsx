@@ -206,7 +206,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 lg:flex-row lg:h-screen">
       {/* サイドバー */}
-      <aside className="w-full border-b border-slate-100 bg-white shadow-lg lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:h-screen lg:w-80 lg:flex-shrink-0 lg:border-b-0 lg:border-r lg:overflow-y-auto">
+      <aside className="fixed inset-y-0 left-0 z-40 w-80 flex-shrink-0 overflow-y-auto border-r border-slate-100 bg-white shadow-lg lg:static">
         <div className="flex h-full flex-col p-6">
           {/* サイドバーヘッダー */}
           <div className="mb-6">
@@ -319,7 +319,7 @@ const DashboardContent = ({ initialDate }: { initialDate: string }) => {
       </aside>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 lg:ml-80">
+      <div className="flex-1 ml-80 lg:ml-0">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
 
         {/* 予定とタスクの統合表示セクション */}
